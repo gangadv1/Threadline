@@ -1,0 +1,130 @@
+{
+  "id": "goal-exchange-application-2026",
+  "title": "Submit exchange application",
+  "description": "Prepare and submit the 2026 university exchange application.",
+  "final_deadline": "2026-10-15T17:00:00Z",
+  "status": "active",
+  "documents": [
+    {
+      "id": "doc-exchange-guidance",
+      "filename": "exchange-application-guidance.pdf",
+      "document_type": "pdf",
+      "page_number": 1,
+      "source_text": "Exchange application requirements and submission guidance.",
+      "uploaded_at": "2026-09-04T09:00:00Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-confirm-eligibility",
+      "title": "Confirm eligibility",
+      "description": "Check exchange eligibility requirements with the international office.",
+      "status": "not_started",
+      "priority": "high",
+      "deadline": "2026-09-12T17:00:00Z",
+      "estimated_processing_time_days": 2,
+      "dependencies": [],
+      "source_ids": ["doc-exchange-guidance"],
+      "responsible_party": "International Office",
+      "consequence_if_missed": "The application may be rejected as ineligible.",
+      "confidence": 0.98,
+      "created_at": "2026-09-04T09:00:00Z",
+      "updated_at": "2026-09-04T09:00:00Z"
+    },
+    {
+      "id": "task-request-transcript",
+      "title": "Request official transcript",
+      "description": "Request an official transcript from the student records office.",
+      "status": "not_started",
+      "priority": "urgent",
+      "deadline": "2026-09-20T17:00:00Z",
+      "estimated_processing_time_days": 5,
+      "dependencies": [
+        {"prerequisite_task_id": "task-confirm-eligibility", "reason": "Eligibility must be confirmed first."}
+      ],
+      "source_ids": ["doc-exchange-guidance"],
+      "responsible_party": "Student Records Office",
+      "consequence_if_missed": "The application cannot include the required transcript.",
+      "confidence": 0.95,
+      "created_at": "2026-09-04T09:00:00Z",
+      "updated_at": "2026-09-04T09:00:00Z"
+    },
+    {
+      "id": "task-ask-reference",
+      "title": "Ask lecturer for reference",
+      "description": "Ask a lecturer to provide an academic reference letter.",
+      "status": "not_started",
+      "priority": "high",
+      "deadline": "2026-09-22T17:00:00Z",
+      "estimated_processing_time_days": 7,
+      "dependencies": [
+        {"prerequisite_task_id": "task-confirm-eligibility", "reason": "The lecturer needs the confirmed exchange details."}
+      ],
+      "source_ids": ["doc-exchange-guidance"],
+      "responsible_party": "Dr. Morgan Lee",
+      "consequence_if_missed": "The application will be missing an academic reference.",
+      "confidence": 0.9,
+      "created_at": "2026-09-04T09:00:00Z",
+      "updated_at": "2026-09-04T09:00:00Z"
+    },
+    {
+      "id": "task-personal-statement",
+      "title": "Prepare personal statement",
+      "description": "Draft and revise the personal statement for the exchange application.",
+      "status": "not_started",
+      "priority": "medium",
+      "deadline": "2026-09-28T17:00:00Z",
+      "estimated_processing_time_days": 6,
+      "dependencies": [],
+      "source_ids": ["doc-exchange-guidance"],
+      "responsible_party": "Applicant",
+      "consequence_if_missed": "The final application will be incomplete.",
+      "confidence": 0.97,
+      "created_at": "2026-09-04T09:00:00Z",
+      "updated_at": "2026-09-04T09:00:00Z"
+    },
+    {
+      "id": "task-upload-supporting-documents",
+      "title": "Upload transcript and reference",
+      "description": "Upload the official transcript and signed reference letter.",
+      "status": "not_started",
+      "priority": "high",
+      "deadline": "2026-10-05T17:00:00Z",
+      "estimated_processing_time_days": 2,
+      "dependencies": [
+        {"prerequisite_task_id": "task-request-transcript", "reason": "The transcript must be received first."},
+        {"prerequisite_task_id": "task-ask-reference", "reason": "The reference must be received first."}
+      ],
+      "source_ids": ["doc-exchange-guidance"],
+      "responsible_party": "Applicant",
+      "consequence_if_missed": "Supporting documents will be absent at submission.",
+      "confidence": 0.94,
+      "created_at": "2026-09-04T09:00:00Z",
+      "updated_at": "2026-09-04T09:00:00Z"
+    },
+    {
+      "id": "task-review-submit",
+      "title": "Review and submit application",
+      "description": "Complete a final review and submit the exchange application.",
+      "status": "not_started",
+      "priority": "urgent",
+      "deadline": "2026-10-15T17:00:00Z",
+      "estimated_processing_time_days": 1,
+      "dependencies": [
+        {"prerequisite_task_id": "task-upload-supporting-documents", "reason": "All supporting documents must be uploaded."},
+        {"prerequisite_task_id": "task-personal-statement", "reason": "The personal statement must be complete."}
+      ],
+      "source_ids": ["doc-exchange-guidance"],
+      "responsible_party": "Applicant",
+      "consequence_if_missed": "The exchange application will not be considered.",
+      "confidence": 0.99,
+      "created_at": "2026-09-04T09:00:00Z",
+      "updated_at": "2026-09-04T09:00:00Z"
+    }
+  ],
+  "risks": [],
+  "proposed_actions": [],
+  "next_action_summary": null,
+  "created_at": "2026-09-04T09:00:00Z",
+  "updated_at": "2026-09-04T09:00:00Z"
+}
