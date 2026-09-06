@@ -300,8 +300,20 @@
    `uvicorn app.main:app --reload` runs it on :8000 by default).
    If the backend can't be reached, the UI falls back to the mock `goal`
    object below so the prototype still demos cleanly. */
-const API_BASE = https://bug-free-space-memory-gx6pq7gwx5r2wp5p-8000.app.github.dev/
-
+//const API_BASE = https://bug-free-space-memory-gx6pq7gwx5r2wp5p-8000.app.github.dev/
+function resolveApiBase() {
+  const host = window.location.hostname;
+  // Codespaces forwarded URLs look like: <name>-<port>.app.github.dev
+  const match = host.match(/^(.*)-(\d+)\.app\.github\.dev$/);
+  if (match) {
+    const [, prefix] = match;
+    return `https://${prefix}-8000.app.github.dev`;
+  }
+  // Not running under Codespaces forwarding (plain localhost, file://, etc.)
+  return "http://127.0.0.1:8000";
+}
+const API_BASE = resolveApiBase();
+  
 /* Fixed "now" for this demo so the on-screen days-to-deadline countdown
    matches what the backend's feasibility engine computes against. Swap
    for `new Date().toISOString()` once this is wired to real dates. */
