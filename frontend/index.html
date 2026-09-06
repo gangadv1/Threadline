@@ -300,24 +300,7 @@
    `uvicorn app.main:app --reload` runs it on :8000 by default).
    If the backend can't be reached, the UI falls back to the mock `goal`
    object below so the prototype still demos cleanly. */
-function resolveApiBase(){
-  const { hostname, protocol } = window.location;
-
-  // GitHub Codespaces forwards each port as its own subdomain, e.g.
-  // https://improved-space-potato-xrx4wvjqrw6fvvxp-5500.app.github.dev
-  // The frontend is on -5500; the backend is the same host with -8000
-  // instead. This means it keeps working even after the Codespace
-  // restarts and the URL changes, since we derive it instead of hardcoding it.
-  if(hostname.endsWith(".app.github.dev")){
-    return `${protocol}//${hostname.replace(/-\d+\.app\.github\.dev$/, "-8000.app.github.dev")}`;
-  }
-
-  // Local / non-Codespaces fallback (running index.html directly, or via
-  // `python -m http.server` on your own machine).
-  return "http://127.0.0.1:8000";
-}
-
-const API_BASE = resolveApiBase();
+const API_BASE = "https://bug-free-space-memory-gx6pq7gwx5r2wp5p-8000.app.github.dev/"
 
 /* Fixed "now" for this demo so the on-screen days-to-deadline countdown
    matches what the backend's feasibility engine computes against. Swap
