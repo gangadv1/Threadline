@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Threadline — Administrative Task Agent</title>
+<style>
+  :root{
+    --ink:#1b2430;
+    --paper:#f7f4ee;
+    --paper-raised:#ffffff;
+    --line:#dcd5c4;
+    --amber:#c17a2f;
+    --amber-deep:#9c5f20;
+    --green:#4b7a5b;
+    --red:#a3402f;
+    --muted:#6b6558;
+    --shadow: 0 1px 0 rgba(27,36,48,0.06);
+    font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family: "Charter", "Georgia", serif;
+  }
+  .sans{ font-family: "Segoe UI", Helvetica, Arial, sans-serif; }
+
+  header.top{
+    display:flex; align-items:baseline; justify-content:space-between;
+    padding:22px 32px 16px 32px;
+    border-bottom:1px solid var(--line);
+  }
+  header.top .brand{
+    font-size:26px; font-weight:600; letter-spacing:0.2px;
+  }
+  header.top .brand span{ color:var(--amber-deep); }
+  header.top .goal-line{ font-family:"Segoe UI",sans-serif; font-size:13px; color:var(--muted); text-align:right; }
+  header.top .goal-line b{ color:var(--ink); }
+  .badge{
+    display:inline-block; font-size:11px; padding:2px 9px; border-radius:20px;
+    margin-right:8px; vertical-align:middle; font-weight:600;
+  }
+  .badge.live{ background:#e6ede6; color:var(--green); }
+  .badge.offline{ background:#f2ecd9; color:var(--amber-deep); }
+  .badge.checking{ background:#eee8d8; color:var(--muted); }
+
+  nav.tabs{
+    display:flex; gap:2px; padding:0 32px; border-bottom:1px solid var(--line);
+    background:var(--paper);
+  }
+  nav.tabs button{
+    font-family:"Segoe UI",sans-serif;
+    font-size:14px;
+    padding:14px 18px;
+    background:none; border:none; cursor:pointer;
+    color:var(--muted);
+    border-bottom:2px solid transparent;
+    margin-bottom:-1px;
+  }
+  nav.tabs button.active{
+    color:var(--ink); border-bottom:2px solid var(--amber-deep); font-weight:600;
+  }
+
+  main{ padding:28px 32px 64px 32px; max-width:1040px; margin:0 auto; }
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  .card{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:20px 22px;
+    margin-bottom:16px;
+    box-shadow:var(--shadow);
+  }
+  h2.section-title{
+    font-size:19px; margin:0 0 4px 0; font-weight:600;
+  }
+  p.section-sub{
+    font-family:"Segoe UI",sans-serif; font-size:13px; color:var(--muted); margin:0 0 18px 0;
+  }
+
+  /* Upload view */
+  .dropzone{
+    border:1.5px dashed var(--line);
+    border-radius:8px;
+    padding:48px 20px;
+    text-align:center;
+    cursor:pointer;
+    background:#fbfaf6;
+  }
+  .dropzone:hover{ border-color:var(--amber-deep); }
+  .dropzone .icon{ font-size:34px; margin-bottom:10px; }
+  .dropzone p{ font-family:"Segoe UI",sans-serif; color:var(--muted); font-size:14px; margin:2px 0; }
+  input[type=file]{ display:none; }
+  .file-chip{
+    font-family:"Segoe UI",sans-serif; font-size:13px;
+    display:inline-flex; align-items:center; gap:8px;
+    background:#eee8d8; border:1px solid var(--line); border-radius:20px;
+    padding:5px 12px; margin:10px 6px 0 0;
+  }
+  button.primary{
+    font-family:"Segoe UI",sans-serif; font-weight:600; font-size:14px;
+    background:var(--amber-deep); color:white; border:none; border-radius:5px;
+    padding:10px 18px; cursor:pointer; margin-top:16px;
+  }
+  button.primary:hover{ background:#7f4d1a; }
+  button.ghost{
+    font-family:"Segoe UI",sans-serif; font-size:13px;
+    background:none; border:1px solid var(--line); border-radius:5px;
+    padding:7px 14px; cursor:pointer; color:var(--ink);
+  }
+  button.ghost:hover{ border-color:var(--amber-deep); }
+
+  .processing{ font-family:"Segoe UI",sans-serif; font-size:14px; color:var(--muted); }
+  .processing .step{ margin:6px 0; opacity:0.4; }
+  .processing .step.done{ opacity:1; color:var(--green); }
+  .processing .step.active{ opacity:1; color:var(--amber-deep); }
+
+  /* Dashboard */
+  .stat-row{ display:flex; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
+  .stat{
+    flex:1; min-width:140px;
+    background:var(--paper-raised); border:1px solid var(--line); border-radius:6px;
+    padding:14px 16px;
+  }
+  .stat .num{ font-size:26px; font-weight:600; }
+  .stat .label{ font-family:"Segoe UI",sans-serif; font-size:12px; color:var(--muted); text-transform:none; }
+
+  .risk-banner{
+    border-left:4px solid var(--red);
+    background:#f7ece8;
+    padding:12px 16px; border-radius:4px; margin-bottom:16px;
+    font-family:"Segoe UI",sans-serif; font-size:13.5px;
+  }
+  .risk-banner b{ color:var(--red); }
+  .risk-banner.hidden{ display:none; }
+
+  /* Task list */
+  .task-row{
+    display:grid;
+    grid-template-columns: 22px 1fr 120px 110px 100px;
+    gap:14px; align-items:center;
+    padding:12px 4px; border-bottom:1px solid var(--line);
+    font-family:"Segoe UI",sans-serif; font-size:13.5px;
+  }
+  .task-row:last-child{ border-bottom:none; }
+  .task-row .title{ font-weight:600; color:var(--ink); }
+  .task-row .desc{ color:var(--muted); font-size:12.5px; margin-top:2px; }
+  .task-row .dep{ font-size:11.5px; color:var(--amber-deep); margin-top:3px; }
+  .dot{ width:12px; height:12px; border-radius:50%; }
+  .dot.not_started{ background:#c8c1af; }
+  .dot.in_progress{ background:var(--amber-deep); }
+  .dot.blocked{ background:var(--red); }
+  .dot.completed{ background:var(--green); }
+  .dot.rejected{ background:#8a8a8a; }
+  .pill{
+    display:inline-block; padding:3px 9px; border-radius:20px; font-size:11px;
+    text-align:center;
+  }
+  .pill.low{ background:#eef1ea; color:#546a4c; }
+  .pill.medium{ background:#f2ecd9; color:#8a6a1f; }
+  .pill.high{ background:#f5e2d0; color:#9c5f20; }
+  .pill.urgent{ background:#f5dbd4; color:var(--red); }
+  select.status-select{
+    font-family:"Segoe UI",sans-serif; font-size:12.5px;
+    border:1px solid var(--line); border-radius:4px; padding:4px 6px;
+    background:white;
+  }
+
+  /* Approvals */
+  .approval-card{
+    border:1px solid var(--line); border-radius:6px; padding:16px 18px; margin-bottom:12px;
+    background:#fbfaf6;
+  }
+  .approval-card .kind{
+    font-family:"Segoe UI",sans-serif; font-size:11px; font-weight:600; color:var(--amber-deep);
+  }
+  .approval-card .body-text{
+    font-family:"Segoe UI",sans-serif; font-size:13.5px; margin:8px 0 12px 0; color:var(--ink);
+  }
+  .approval-card .draft{
+    background:white; border:1px solid var(--line); border-radius:5px; padding:12px;
+    font-size:13px; white-space:pre-wrap; margin-bottom:12px; font-family:"Segoe UI",sans-serif;
+  }
+  .approval-actions{ display:flex; gap:8px; }
+  button.approve{ background:var(--green); color:white; border:none; }
+  button.reject{ background:none; border:1px solid var(--red); color:var(--red); }
+  button.approve, button.reject{
+    font-family:"Segoe UI",sans-serif; font-size:12.5px; border-radius:5px; padding:7px 14px; cursor:pointer;
+  }
+  .decided{
+    font-family:"Segoe UI",sans-serif; font-size:12.5px; font-weight:600;
+  }
+  .decided.approved{ color:var(--green); }
+  .decided.rejected{ color:var(--red); }
+
+  footer.note{
+    font-family:"Segoe UI",sans-serif; font-size:11.5px; color:var(--muted);
+    text-align:center; padding:24px; border-top:1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">Thread<span>line</span></div>
+  <div class="goal-line">
+    <span id="backendBadge" class="badge checking">checking backend…</span>
+    <span id="goalLine"></span>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button data-view="upload" class="active">Upload Notices</button>
+  <button data-view="dashboard">Action Plan</button>
+  <button data-view="tasks">Tasks</button>
+  <button data-view="approvals">Approvals</button>
+</nav>
+
+<main>
+
+  <!-- UPLOAD VIEW -->
+  <section class="view active" id="view-upload">
+    <div class="card">
+      <h2 class="section-title">Upload your notices</h2>
+      <p class="section-sub">Emails, PDFs, or portal screenshots. Threadline reads them and builds your checklist.</p>
+      <div class="dropzone" id="dropzone">
+        <div class="icon">📄</div>
+        <p><strong>Click to choose files</strong> or drag them here</p>
+        <p>PDF, EML, PNG — sample exchange-application notice is preloaded</p>
+      </div>
+      <input type="file" id="fileInput" multiple>
+      <div id="fileChips"></div>
+      <button class="primary" id="processBtn">Build my action plan</button>
+      <div class="processing" id="processing" style="display:none; margin-top:18px;">
+        <div class="step" data-step="0">Reading documents…</div>
+        <div class="step" data-step="1">Extracting deadlines and requirements…</div>
+        <div class="step" data-step="2">Mapping task dependencies…</div>
+        <div class="step" data-step="3">Checking feasibility against the final deadline…</div>
+        <div class="step" data-step="4">Plan ready.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD VIEW -->
+  <section class="view" id="view-dashboard">
+    <div class="card">
+      <h2 class="section-title" id="goalTitle">Submit exchange application</h2>
+      <p class="section-sub" id="goalDesc">Prepare and submit the 2026 university exchange application.</p>
+
+      <div class="risk-banner hidden" id="riskBanner"></div>
+
+      <div class="stat-row">
+        <div class="stat"><div class="num" id="statTotal">0</div><div class="label sans">Tasks tracked</div></div>
+        <div class="stat"><div class="num" id="statDone">0</div><div class="label sans">Completed</div></div>
+        <div class="stat"><div class="num" id="statBlocked">0</div><div class="label sans">Blocked</div></div>
+        <div class="stat"><div class="num" id="statDays">—</div><div class="label sans">Days to final deadline</div></div>
+      </div>
+
+      <p class="section-sub" style="margin-bottom:6px;"><b class="sans" style="color:var(--ink);">Next recommended action:</b></p>
+      <p class="body-text sans" id="nextAction" style="font-family:'Segoe UI',sans-serif; font-size:14px;"></p>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">Try the replan demo</h2>
+      <p class="section-sub">This is the moment worth showing judges: reject a document, or pull in a deadline, and watch Threadline replan.</p>
+      <button class="ghost" id="rejectDocBtn">Reject "Official transcript" (mark blocked)</button>
+      <button class="ghost" id="pullDeadlineBtn" style="margin-left:8px;">Pull final deadline forward by 10 days</button>
+    </div>
+  </section>
+
+  <!-- TASKS VIEW -->
+  <section class="view" id="view-tasks">
+    <div class="card">
+      <h2 class="section-title">Task checklist</h2>
+      <p class="section-sub">Ordered by dependency. Change a status to see downstream risk update on the Action Plan tab.</p>
+      <div id="taskList"></div>
+    </div>
+  </section>
+
+  <!-- APPROVALS VIEW -->
+  <section class="view" id="view-approvals">
+    <div class="card">
+      <h2 class="section-title">Proposed actions awaiting your approval</h2>
+      <p class="section-sub">Threadline drafts these — nothing is sent until you approve it.</p>
+      <div id="approvalList"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="note">Threadline prototype — frontend runs on mock data now; swap `mockApi` calls for the FastAPI endpoints once they're ready.</footer>
+
+<script>
+/* ---------- Backend connection ----------
+   Point this at your running FastAPI backend (see backend/README.md:
+   `uvicorn app.main:app --reload` runs it on :8000 by default).
+   If the backend can't be reached, the UI falls back to the mock `goal`
+   object below so the prototype still demos cleanly. */
+//const API_BASE = https://bug-free-space-memory-gx6pq7gwx5r2wp5p-8000.app.github.dev/
+function resolveApiBase() {
+  const host = window.location.hostname;
+  // Codespaces forwarded URLs look like: <name>-<port>.app.github.dev
+  const match = host.match(/^(.*)-(\d+)\.app\.github\.dev$/);
+  if (match) {
+    const [, prefix] = match;
+    return `https://${prefix}-8000.app.github.dev`;
+  }
+  // Not running under Codespaces forwarding (plain localhost, file://, etc.)
+  return "http://127.0.0.1:8000";
+}
+const API_BASE = resolveApiBase();
+  
+/* Fixed "now" for this demo so the on-screen days-to-deadline countdown
+   matches what the backend's feasibility engine computes against. Swap
+   for `new Date().toISOString()` once this is wired to real dates. */
+const DEMO_NOW = "2026-09-05T09:00:00Z";
+
+let backendConnected = false;
+let latestFeasibilityReport = null;
+
+const api = {
+  async _handle(response){
+    if(!response.ok){
+      let detail = response.statusText || `HTTP ${response.status}`;
+      try{
+        const body = await response.json();
+        if(body && body.detail) detail = body.detail;
+      }catch(_err){ /* body wasn't JSON, keep statusText */ }
+      throw new Error(detail);
+    }
+    return response.status === 204 ? null : response.json();
+  },
+  health(){
+    return fetch(`${API_BASE}/health`).then(res => api._handle(res));
+  },
+  getGoal(id){
+    return fetch(`${API_BASE}/goals/${id}`).then(res => api._handle(res));
+  },
+  createGoal(goalPayload){
+    return fetch(`${API_BASE}/goals`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(goalPayload)
+    }).then(res => api._handle(res));
+  },
+  runCycle(id, asOf, maxProposals=5){
+    return fetch(`${API_BASE}/goals/${id}/cycle`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ as_of: asOf, max_proposals: maxProposals })
+    }).then(res => api._handle(res));
+  },
+  runDisruption(id, payload){
+    return fetch(`${API_BASE}/goals/${id}/disruption`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    }).then(res => api._handle(res));
+  },
+  updateGoal(id, payload){
+    return fetch(`${API_BASE}/goals/${id}`, {
+      method:"PATCH", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    }).then(res => api._handle(res));
+  },
+  updateTaskStatus(id, taskId, payload){
+    return fetch(`${API_BASE}/goals/${id}/tasks/${taskId}`, {
+      method:"PATCH", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    }).then(res => api._handle(res));
+  },
+  reviewAction(id, actionId, payload){
+    return fetch(`${API_BASE}/goals/${id}/actions/${actionId}/review`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    }).then(res => api._handle(res));
+  }
+};
+
+function setBackendStatus(connected){
+  backendConnected = connected;
+  const badge = document.getElementById("backendBadge");
+  const foot = document.querySelector("footer.note");
+  if(connected){
+    badge.textContent = "● Live backend";
+    badge.className = "badge live";
+    foot.textContent = `Threadline — connected to the FastAPI backend at ${API_BASE}.`;
+  } else {
+    badge.textContent = "○ Demo data (backend offline)";
+    badge.className = "badge offline";
+    foot.textContent = `Threadline — couldn't reach ${API_BASE}, showing local demo data. Run the backend (see backend/README.md) and reload to connect.`;
+  }
+}
+
+/* ---------- Mock data, matching the AdministrativeGoal / AdministrativeTask / ActionProposal / Risk schema ---------- */
+let goal = {
+  id: "goal-exchange-application-2026",
+  title: "Submit exchange application",
+  description: "Prepare and submit the 2026 university exchange application.",
+  final_deadline: "2026-10-15T17:00:00Z",
+  status: "active",
+  next_action_summary: "Confirm eligibility with the International Office this week — everything else depends on it.",
+  tasks: [
+    { id:"task-confirm-eligibility", title:"Confirm eligibility", description:"Check exchange eligibility requirements with the international office.",
+      status:"not_started", priority:"high", deadline:"2026-09-12T17:00:00Z", estimated_processing_time_days:1, dependencies:[], responsible_party:"International Office",
+      consequence_if_missed:"The application may be rejected as ineligible." },
+    { id:"task-request-transcript", title:"Request official transcript", description:"Request an official transcript from the student records office.",
+      status:"not_started", priority:"urgent", deadline:"2026-09-20T17:00:00Z", estimated_processing_time_days:5,
+      dependencies:[{prerequisite_task_id:"task-confirm-eligibility", reason:"Eligibility must be confirmed first."}],
+      responsible_party:"Student Records Office", consequence_if_missed:"The application cannot include the required transcript." },
+    { id:"task-recommendation-letter", title:"Request recommendation letter", description:"Ask a professor for a signed recommendation letter.",
+      status:"not_started", priority:"medium", deadline:"2026-09-25T17:00:00Z", estimated_processing_time_days:5,
+      dependencies:[{prerequisite_task_id:"task-confirm-eligibility", reason:"Eligibility must be confirmed first."}],
+      responsible_party:"You", consequence_if_missed:"The application will be incomplete." },
+    { id:"task-submit-application", title:"Submit application portal form", description:"Upload all documents and submit via the exchange portal.",
+      status:"not_started", priority:"urgent", deadline:"2026-10-15T17:00:00Z", estimated_processing_time_days:1,
+      dependencies:[
+        {prerequisite_task_id:"task-request-transcript", reason:"Transcript must be attached."},
+        {prerequisite_task_id:"task-recommendation-letter", reason:"Letter must be attached."}
+      ],
+      responsible_party:"You", consequence_if_missed:"Missing the final deadline forfeits the exchange slot." }
+  ],
+  risks: [],
+  proposed_actions: [
+    { id:"act-1", related_task_id:"task-confirm-eligibility", action_type:"reminder",
+      description:"Reminder to start eligibility check today.",
+      generated_content:"Hi — just a nudge: eligibility confirmation is due 12 Sep and everything else in your exchange application depends on it. Worth booking a slot with the International Office this week.",
+      approval_status:"pending" },
+    { id:"act-2", related_task_id:"task-request-transcript", action_type:"draft_email",
+      description:"Draft email requesting an official transcript.",
+      generated_content:"Subject: Request for official transcript — exchange application\n\nDear Student Records Office,\n\nI am preparing my 2026 exchange application and would like to request an official transcript. Could you let me know the processing time and any fee involved?\n\nThank you,\n[Your name]",
+      approval_status:"pending" }
+  ]
+};
+
+/* ---------- Tab navigation ---------- */
+document.querySelectorAll("nav.tabs button").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("view-"+btn.dataset.view).classList.add("active");
+    if(btn.dataset.view==="dashboard") renderDashboard();
+    if(btn.dataset.view==="tasks") renderTasks();
+    if(btn.dataset.view==="approvals") renderApprovals();
+  });
+});
+
+/* ---------- Upload view ---------- */
+const dropzone = document.getElementById("dropzone");
+const fileInput = document.getElementById("fileInput");
+const fileChips = document.getElementById("fileChips");
+let stagedFiles = ["exchange-application-guidance.pdf"];
+
+function renderChips(){
+  fileChips.innerHTML = stagedFiles.map(f=>`<span class="file-chip">📎 ${f}</span>`).join("");
+}
+renderChips();
+
+dropzone.addEventListener("click", ()=>fileInput.click());
+fileInput.addEventListener("change", (e)=>{
+  Array.from(e.target.files).forEach(f=>stagedFiles.push(f.name));
+  renderChips();
+});
+
+document.getElementById("processBtn").addEventListener("click", ()=>{
+  const processing = document.getElementById("processing");
+  processing.style.display = "block";
+  const steps = processing.querySelectorAll(".step");
+  let i = 0;
+  steps.forEach(s=>s.classList.remove("active","done"));
+  const tick = setInterval(()=>{
+    if(i>0) steps[i-1].classList.replace("active","done");
+    if(i < steps.length){ steps[i].classList.add("active"); i++; }
+    else {
+      clearInterval(tick);
+      finishOnboarding();
+    }
+  }, 550);
+});
+
+async function finishOnboarding(){
+  // The animation above stands in for real document extraction (that's
+  // Member 2's part). Once it "finishes", ask the backend to actually run
+  // PLAN → ANALYSE → ACT against the goal so the dashboard reflects a real
+  // ordered plan, feasibility check, and action proposals - not just the
+  // pre-written mock summary.
+  if(backendConnected){
+    try{
+      const result = await api.runCycle(goal.id, DEMO_NOW);
+      goal = result.updated_goal;
+      latestFeasibilityReport = result.feasibility_report;
+    }catch(err){
+      console.warn("Cycle call failed after onboarding, showing existing data:", err);
+    }
+  }
+  document.querySelector('nav.tabs button[data-view="dashboard"]').click();
+}
+
+/* ---------- Dashboard ---------- */
+function daysUntil(dateStr){
+  const diff = new Date(dateStr) - new Date(DEMO_NOW);
+  return Math.max(0, Math.round(diff / 86400000));
+}
+
+function renderDashboard(){
+  document.getElementById("goalLine").innerHTML = `<b>${goal.title}</b> · final deadline ${new Date(goal.final_deadline).toDateString()}`;
+  document.getElementById("goalTitle").textContent = goal.title;
+  document.getElementById("goalDesc").textContent = goal.description;
+  document.getElementById("nextAction").textContent = goal.next_action_summary;
+
+  document.getElementById("statTotal").textContent = goal.tasks.length;
+  document.getElementById("statDone").textContent = goal.tasks.filter(t=>t.status==="completed").length;
+  document.getElementById("statBlocked").textContent = goal.tasks.filter(t=>t.status==="blocked").length;
+  document.getElementById("statDays").textContent = daysUntil(goal.final_deadline);
+
+  const banner = document.getElementById("riskBanner");
+  // Combine planning-time risks (cycles/dangling deps, from goal.risks) with
+  // live feasibility issues (blocked tasks, deadline misses, low confidence,
+  // etc.) from the last cycle/disruption call - both shapes carry the same
+  // severity/explanation/recommended_response fields.
+  const combinedRisks = [
+    ...(goal.risks || []),
+    ...((latestFeasibilityReport && latestFeasibilityReport.detected_issues) || [])
+  ];
+  if(combinedRisks.length){
+    banner.classList.remove("hidden");
+    banner.innerHTML = combinedRisks.map(r=>`<b>${r.severity.toUpperCase()} RISK —</b> ${r.explanation} <br><span style="color:var(--muted)">Recommended: ${r.recommended_response}</span>`).join("<hr style='border-color:var(--line)'>");
+  } else {
+    banner.classList.add("hidden");
+  }
+}
+
+/* ---------- Tasks ---------- */
+function renderTasks(){
+  const list = document.getElementById("taskList");
+  list.innerHTML = goal.tasks.map(t=>{
+    const deps = t.dependencies.map(d=>goal.tasks.find(x=>x.id===d.prerequisite_task_id)?.title).filter(Boolean);
+    return `
+    <div class="task-row">
+      <div class="dot ${t.status}"></div>
+      <div>
+        <div class="title">${t.title}</div>
+        <div class="desc">${t.description}</div>
+        ${deps.length ? `<div class="dep">Waits on: ${deps.join(", ")}</div>` : ""}
+      </div>
+      <div><span class="pill ${t.priority}">${t.priority}</span></div>
+      <div class="sans" style="font-size:12px;color:var(--muted)">${new Date(t.deadline).toLocaleDateString()}</div>
+      <select class="status-select" data-id="${t.id}">
+        ${["not_started","in_progress","blocked","completed","rejected"].map(s=>`<option value="${s}" ${s===t.status?"selected":""}>${s.replace("_"," ")}</option>`).join("")}
+      </select>
+    </div>`;
+  }).join("");
+
+  list.querySelectorAll("select.status-select").forEach(sel=>{
+    sel.addEventListener("change", async (e)=>{
+      const taskId = e.target.dataset.id;
+      const newStatus = e.target.value;
+      const task = goal.tasks.find(t=>t.id===taskId);
+
+      if(backendConnected){
+        try{
+          if(newStatus === "blocked" || newStatus === "rejected"){
+            // A blocked/rejected status can affect downstream tasks, so
+            // route it through the replanner rather than a plain PATCH.
+            const result = await api.runDisruption(goal.id, {
+              task_id: taskId, new_status: newStatus, as_of: DEMO_NOW,
+              reason: `Status manually changed to "${newStatus.replace("_"," ")}" from the Tasks tab.`
+            });
+            goal = result.updated_goal;
+            latestFeasibilityReport = result.feasibility_report;
+          } else {
+            await api.updateTaskStatus(goal.id, taskId, { status: newStatus });
+            const result = await api.runCycle(goal.id, DEMO_NOW);
+            goal = result.updated_goal;
+            latestFeasibilityReport = result.feasibility_report;
+          }
+        }catch(err){
+          console.warn("Backend status update failed, applying it locally instead:", err);
+          task.status = newStatus;
+          recomputeRisks();
+        }
+      } else {
+        task.status = newStatus;
+        recomputeRisks();
+      }
+      renderTasks();
+      renderDashboard();
+    });
+  });
+}
+
+/* ---------- Approvals ---------- */
+function renderApprovals(){
+  const list = document.getElementById("approvalList");
+  const labels = {reminder:"Reminder", draft_email:"Draft email", request_info:"Request for information", escalation:"Escalation"};
+  list.innerHTML = goal.proposed_actions.map(a=>{
+    const task = goal.tasks.find(t=>t.id===a.related_task_id);
+    let decided = "";
+    if(a.approval_status==="approved") decided = `<span class="decided approved">✓ Approved — queued to send</span>`;
+    if(a.approval_status==="rejected") decided = `<span class="decided rejected">✕ Rejected</span>`;
+    return `
+    <div class="approval-card">
+      <div class="kind">${labels[a.action_type] || a.action_type} · for "${task ? task.title : a.related_task_id}"</div>
+      <div class="body-text">${a.description}</div>
+      ${a.generated_content ? `<div class="draft">${a.generated_content}</div>` : ""}
+      ${a.approval_status==="pending" ? `
+        <div class="approval-actions">
+          <button class="approve" data-id="${a.id}" data-decision="approved">Approve</button>
+          <button class="reject" data-id="${a.id}" data-decision="rejected">Reject</button>
+        </div>` : decided}
+    </div>`;
+  }).join("");
+
+  list.querySelectorAll("button[data-decision]").forEach(btn=>{
+    btn.addEventListener("click", async (e)=>{
+      const actionId = e.target.dataset.id;
+      const decision = e.target.dataset.decision;
+
+      if(backendConnected){
+        try{
+          goal = await api.reviewAction(goal.id, actionId, { decision });
+        }catch(err){
+          console.warn("Backend review failed, applying it locally instead:", err);
+          const a = goal.proposed_actions.find(x=>x.id===actionId);
+          if(a) a.approval_status = decision;
+        }
+      } else {
+        const a = goal.proposed_actions.find(x=>x.id===actionId);
+        if(a) a.approval_status = decision;
+      }
+      renderApprovals();
+    });
+  });
+}
+
+/* ---------- Replan demo ---------- */
+function recomputeRisks(){
+  goal.risks = [];
+  const transcript = goal.tasks.find(t=>t.id==="task-request-transcript");
+  const submit = goal.tasks.find(t=>t.id==="task-submit-application");
+  if(transcript && transcript.status === "blocked"){
+    goal.risks.push({
+      severity:"high",
+      explanation:`"Request official transcript" is blocked, which blocks "${submit.title}" — the whole application is now at risk of missing the ${new Date(goal.final_deadline).toDateString()} deadline.`,
+      recommended_response:"Escalate to the Student Records Office today, or request an extension from the exchange office."
+    });
+    submit.status = "blocked";
+    goal.proposed_actions.unshift({
+      id:"act-escalate-"+Date.now(), related_task_id:transcript.id, action_type:"escalation",
+      description:"Escalate the blocked transcript request.",
+      generated_content:"Subject: Urgent — transcript request blocked, exchange deadline at risk\n\nDear Student Records Office,\n\nMy transcript request appears to be blocked and my exchange application deadline is approaching. Could you advise on the fastest path to resolve this?\n\nThank you,\n[Your name]",
+      approval_status:"pending"
+    });
+  }
+}
+
+document.getElementById("rejectDocBtn").addEventListener("click", async ()=>{
+  if(backendConnected){
+    try{
+      const result = await api.runDisruption(goal.id, {
+        task_id: "task-request-transcript", new_status: "rejected", as_of: DEMO_NOW,
+        reason: "Transcript request was rejected by the Student Records Office."
+      });
+      goal = result.updated_goal;
+      latestFeasibilityReport = result.feasibility_report;
+      renderDashboard();
+      renderTasks();
+      renderApprovals();
+      return;
+    }catch(err){
+      console.warn("Disruption call failed, falling back to local demo:", err);
+    }
+  }
+  const t = goal.tasks.find(x=>x.id==="task-request-transcript");
+  t.status = "blocked";
+  goal.next_action_summary = "Transcript request is blocked — Threadline has drafted an escalation for your approval.";
+  recomputeRisks();
+  renderDashboard();
+});
+
+document.getElementById("pullDeadlineBtn").addEventListener("click", async ()=>{
+  const d = new Date(goal.final_deadline);
+  d.setDate(d.getDate() - 10);
+  const newDeadline = d.toISOString();
+
+  if(backendConnected){
+    try{
+      await api.updateGoal(goal.id, { final_deadline: newDeadline });
+      const result = await api.runCycle(goal.id, DEMO_NOW);
+      goal = result.updated_goal;
+      latestFeasibilityReport = result.feasibility_report;
+      renderDashboard();
+      renderTasks();
+      renderApprovals();
+      return;
+    }catch(err){
+      console.warn("Goal update failed, falling back to local demo:", err);
+    }
+  }
+  goal.final_deadline = newDeadline;
+  goal.next_action_summary = "Final deadline moved earlier — re-checking every task against the new date.";
+  recomputeRisks();
+  renderDashboard();
+});
+
+/* ---------- Init ---------- */
+async function init(){
+  try{
+    await api.health();
+    backendConnected = true;
+  }catch(err){
+    backendConnected = false;
+  }
+
+  if(backendConnected){
+    try{
+      goal = await api.getGoal(goal.id);
+    }catch(getErr){
+      // Goal doesn't exist yet on this backend - create it from the seed data.
+      try{
+        goal = await api.createGoal(goal);
+      }catch(createErr){
+        console.warn("Could not create the goal on the backend, using local demo data:", createErr);
+        backendConnected = false;
+      }
+    }
+    if(backendConnected){
+      try{
+        const result = await api.runCycle(goal.id, DEMO_NOW);
+        goal = result.updated_goal;
+        latestFeasibilityReport = result.feasibility_report;
+      }catch(cycleErr){
+        console.warn("Initial planning cycle failed, showing goal as stored:", cycleErr);
+      }
+    }
+  }
+
+  setBackendStatus(backendConnected);
+  renderDashboard();
+  renderTasks();
+  renderApprovals();
+}
+
+init();
+</script>
+
+</body>
+</html>
