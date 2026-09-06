@@ -1,0 +1,132 @@
+{
+  "id": "goal-exchange-demo",
+  "title": "Submit exchange application",
+  "description": "Complete all requirements to submit the university exchange application on time.",
+  "final_deadline": "2026-10-15T23:59:59Z",
+  "status": "active",
+  "created_at": "2026-08-25T10:00:00Z",
+  "updated_at": "2026-08-25T10:00:00Z",
+  "documents": [
+    {
+      "id": "doc-exchange-notice",
+      "filename": "exchange_office_notice.pdf",
+      "document_type": "pdf",
+      "page_number": 1,
+      "source_text": "Applicants must submit an official transcript, one reference letter, and the completed application form before the final deadline.",
+      "uploaded_at": "2026-08-25T09:30:00Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-check-eligibility",
+      "title": "Confirm exchange eligibility",
+      "description": "Verify GPA and standing requirements with the exchange office.",
+      "status": "not_started",
+      "priority": "high",
+      "deadline": null,
+      "estimated_processing_time_days": 1,
+      "dependencies": [],
+      "source_ids": ["doc-exchange-notice"],
+      "responsible_party": "Student",
+      "consequence_if_missed": "Application cannot proceed without confirmed eligibility.",
+      "confidence": 1.0,
+      "created_at": "2026-08-25T10:00:00Z",
+      "updated_at": "2026-08-25T10:00:00Z"
+    },
+    {
+      "id": "task-request-transcript",
+      "title": "Request official transcript",
+      "description": "Request an official transcript from the registrar's office.",
+      "status": "not_started",
+      "priority": "high",
+      "deadline": "2026-09-20T23:59:59Z",
+      "estimated_processing_time_days": 5,
+      "dependencies": [
+        {"prerequisite_task_id": "task-check-eligibility", "reason": "Eligibility must be confirmed before requesting documents."}
+      ],
+      "source_ids": ["doc-exchange-notice"],
+      "responsible_party": "Registrar's Office",
+      "consequence_if_missed": "The application cannot be submitted without an official transcript.",
+      "confidence": 0.95,
+      "created_at": "2026-08-25T10:00:00Z",
+      "updated_at": "2026-08-25T10:00:00Z"
+    },
+    {
+      "id": "task-request-reference-letter",
+      "title": "Request reference letter",
+      "description": "Ask a faculty member to write and submit a reference letter.",
+      "status": "not_started",
+      "priority": "medium",
+      "deadline": "2026-09-20T23:59:59Z",
+      "estimated_processing_time_days": 5,
+      "dependencies": [
+        {"prerequisite_task_id": "task-check-eligibility", "reason": "Eligibility must be confirmed before requesting documents."}
+      ],
+      "source_ids": ["doc-exchange-notice"],
+      "responsible_party": "Faculty Advisor",
+      "consequence_if_missed": "The application package will be incomplete without a reference letter.",
+      "confidence": 0.9,
+      "created_at": "2026-08-25T10:00:00Z",
+      "updated_at": "2026-08-25T10:00:00Z"
+    },
+    {
+      "id": "task-upload-supporting-documents",
+      "title": "Upload supporting documents",
+      "description": "Upload the transcript and reference letter to the application portal.",
+      "status": "not_started",
+      "priority": "high",
+      "deadline": "2026-09-25T23:59:59Z",
+      "estimated_processing_time_days": 1,
+      "dependencies": [
+        {"prerequisite_task_id": "task-request-transcript", "reason": "The transcript must be received before it can be uploaded."},
+        {"prerequisite_task_id": "task-request-reference-letter", "reason": "The reference letter must be received before it can be uploaded."}
+      ],
+      "source_ids": ["doc-exchange-notice"],
+      "responsible_party": "Student",
+      "consequence_if_missed": "Supporting evidence will be missing from the application.",
+      "confidence": 1.0,
+      "created_at": "2026-08-25T10:00:00Z",
+      "updated_at": "2026-08-25T10:00:00Z"
+    },
+    {
+      "id": "task-complete-application-form",
+      "title": "Complete application form",
+      "description": "Fill out and review the exchange application form.",
+      "status": "not_started",
+      "priority": "medium",
+      "deadline": "2026-10-05T23:59:59Z",
+      "estimated_processing_time_days": 2,
+      "dependencies": [
+        {"prerequisite_task_id": "task-check-eligibility", "reason": "Eligibility must be confirmed before the form can be completed."}
+      ],
+      "source_ids": ["doc-exchange-notice"],
+      "responsible_party": "Student",
+      "consequence_if_missed": "The application cannot be submitted without a completed form.",
+      "confidence": 1.0,
+      "created_at": "2026-08-25T10:00:00Z",
+      "updated_at": "2026-08-25T10:00:00Z"
+    },
+    {
+      "id": "task-submit-application",
+      "title": "Submit exchange application package",
+      "description": "Submit the complete application package through the exchange portal.",
+      "status": "not_started",
+      "priority": "urgent",
+      "deadline": "2026-10-15T23:59:59Z",
+      "estimated_processing_time_days": 1,
+      "dependencies": [
+        {"prerequisite_task_id": "task-upload-supporting-documents", "reason": "Supporting documents must be uploaded before final submission."},
+        {"prerequisite_task_id": "task-complete-application-form", "reason": "The form must be completed before final submission."}
+      ],
+      "source_ids": ["doc-exchange-notice"],
+      "responsible_party": "Student",
+      "consequence_if_missed": "Missing the final deadline forfeits the exchange placement.",
+      "confidence": 1.0,
+      "created_at": "2026-08-25T10:00:00Z",
+      "updated_at": "2026-08-25T10:00:00Z"
+    }
+  ],
+  "risks": [],
+  "proposed_actions": [],
+  "next_action_summary": null
+}
