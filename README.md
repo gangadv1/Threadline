@@ -32,4 +32,7 @@ cd frontend
 
 python3 -m http.server 5500
 
-### note: frontend is on 5500 and backend is on 8000
+### note
+frontend is on 5500 and backend is on 8000
+
+keep all 3 terminals running
