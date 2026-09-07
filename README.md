@@ -17,7 +17,8 @@ python3 -c "import pydantic, fastapi; print('ok')"
 python3 -m pytest
 
 
-New terminal:
+### New terminal:
+
 cd backend
 
 source .venv/bin/activate      # if you're not already in it
@@ -25,10 +26,10 @@ source .venv/bin/activate      # if you're not already in it
 uvicorn app.main:app --reload
 
 
-New terminal:
+### New terminal:
 
 cd frontend
 
 python3 -m http.server 5500
 
-note: frontend is on 5500 and backend is on 8000
+### note: frontend is on 5500 and backend is on 8000
